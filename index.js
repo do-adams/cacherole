@@ -4,6 +4,7 @@ const cache = require('memory-cache');
 
 class Cacherole {
 	constructor() {
+		this.Cacherole = Cacherole;
 		this.cache = new cache.Cache();
 	}
 
@@ -29,4 +30,3 @@ class Cacherole {
 }
 
 module.exports = new Cacherole();
-module.exports.Cacherole = Cacherole;

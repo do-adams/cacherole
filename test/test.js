@@ -10,7 +10,11 @@ describe('cacherole', function() {
 
 	it('should expose the Cacherole constructor', function() {
 		assert.exists(cacherole.Cacherole);
-		assert.instanceOf(new cacherole.Cacherole(), cacherole.Cacherole);
+
+		let newInstance = new cacherole.Cacherole();
+		assert.instanceOf(newInstance, cacherole.Cacherole);
+		assert.exists(newInstance.Cacherole);
+		assert.strictEqual(newInstance.Cacherole, cacherole.Cacherole);
 	});
 
 	it('should expose the cache interface', function() {
@@ -21,7 +25,7 @@ describe('cacherole', function() {
 		const newInstance = new cacherole.Cacherole();
 
 		assert.exists(newInstance.cache);
-		assert.notStrictEqual(cacherole.cache, newInstance.cache);
+		assert.notStrictEqual(newInstance.cache, cacherole.cache);
 	});
 
 	describe('put()', function() {
@@ -190,8 +194,14 @@ describe('cacherole', function() {
 		});
 
 		describe('behavior', function() {
+			beforeEach(function() {
+				cacherole = new cacherole.Cacherole();
+			});
 
-
+			// Returns a random positive integer
+			function randomInt() {
+				return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+			};
 
 			it('should return a function value', function() {
 				const fnValue = cacherole.put(() => {});
@@ -203,13 +213,7 @@ describe('cacherole', function() {
 				assert.typeOf(optnValue, 'function');
 			});
 
-			it('should cache function calls with a valid property key value', function() {
-				
-			});
 
-			it('should cache results from the function', function() {
-				
-			});
 		});
 	});
 });
