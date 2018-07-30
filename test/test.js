@@ -1,7 +1,7 @@
 'use strict';
 
-const assert = require('chai').assert,
-	cacherole = require('../index.js');
+const assert = require('chai').assert;
+let cacherole = require('../index.js');
 
 describe('cacherole', function() {
 	it('should be an instance of the Cacherole constructor', function() {
@@ -10,10 +10,18 @@ describe('cacherole', function() {
 
 	it('should expose the Cacherole constructor', function() {
 		assert.exists(cacherole.Cacherole);
+		assert.instanceOf(new cacherole.Cacherole(), cacherole.Cacherole);
 	});
 
 	it('should expose the cache interface', function() {
 		assert.exists(cacherole.cache);
+	});
+
+	it('should create a new cache instance when created via the Cacherole constructor', function() {
+		const newInstance = new cacherole.Cacherole();
+
+		assert.exists(newInstance.cache);
+		assert.notStrictEqual(cacherole.cache, newInstance.cache);
 	});
 
 	describe('put()', function() {
@@ -181,14 +189,27 @@ describe('cacherole', function() {
 			});
 		});
 
-		it('should return a function value', function() {
-			const fnValue = cacherole.put(() => {});
-			const optnValue = cacherole.put({
-				action: () => {}
+		describe('behavior', function() {
+
+
+
+			it('should return a function value', function() {
+				const fnValue = cacherole.put(() => {});
+				const optnValue = cacherole.put({
+					action: () => {}
+				});
+	
+				assert.typeOf(fnValue, 'function');
+				assert.typeOf(optnValue, 'function');
 			});
 
-			assert.typeOf(fnValue, 'function');
-			assert.typeOf(optnValue, 'function');
+			it('should cache function calls with a valid property key value', function() {
+				
+			});
+
+			it('should cache results from the function', function() {
+				
+			});
 		});
 	});
 });
