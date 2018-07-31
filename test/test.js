@@ -21,6 +21,13 @@ describe('cacherole', function() {
 		assert.exists(cacherole.cache);
 	});
 
+	it('should expose the cache interface as read-only', function() {
+		let obj = {};
+		cacherole.cache = obj;
+
+		assert.notStrictEqual(cacherole.cache, obj);
+	});
+
 	it('should create a new cache instance when created via the Cacherole constructor', function() {
 		const newInstance = new cacherole.Cacherole();
 
