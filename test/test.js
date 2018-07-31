@@ -194,14 +194,28 @@ describe('cacherole', function() {
 		});
 
 		describe('behavior', function() {
-			beforeEach(function() {
-				cacherole = new cacherole.Cacherole();
+			// Toss testing function - always returns a new object based on args from call
+			let toss;
+			function tossValues(...values) {
+				return values;
+			};
+
+			describe('toss testing function tests', function() {
+				it('should return new objects on each call', function() {
+					assert.notStrictEqual(tossValues(), tossValues());
+					assert.deepEqual(tossValues(), tossValues());
+				});
+
+				it('should return unique new objects based on given arguments', function() {
+					assert.notStrictEqual(tossValues(1, 2, 3, 4), tossValues(true, false, {}));
+					assert.notDeepEqual(tossValues(1, 2, 3, 4), tossValues(true, false, {}));
+				});
 			});
 
-			// Returns a random positive integer
-			function randomInt() {
-				return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-			};
+			beforeEach(function() {
+				cacherole = new cacherole.Cacherole();
+				toss = cacherole.put(tossValues);
+			});
 
 			it('should return a function value', function() {
 				const fnValue = cacherole.put(() => {});
@@ -209,10 +223,59 @@ describe('cacherole', function() {
 					action: () => {}
 				});
 	
+				assert.typeOf(toss, 'function');
 				assert.typeOf(fnValue, 'function');
 				assert.typeOf(optnValue, 'function');
 			});
 
+			it('should return a function value which returns a function value', function() {
+				const firstFn = cacherole.put(() => {});
+				const secondFn = firstFn();
+
+				assert.typeOf(secondFn, 'function');
+			});
+
+			it('should cache function calls with a valid property key value', function() {
+				const val0 = toss('0')();
+				const val1 = toss('1')(0);
+				const val2 = toss('2')(0, 1);
+
+				assert.strictEqual(val0, toss('0')());
+				assert.strictEqual(val1, toss('1')(0));
+				assert.strictEqual(val2, toss('2')(0, 1));
+			});
+
+			it('should cache function calls with an undefined key value', function() {
+				const val1 = toss()(0);
+
+				assert.strictEqual(val1, toss()(0));
+			});
+			
+			it('should execute the action provided by the caller when called', function() {
+				const val0 = toss('0')();
+				const val1 = toss('1')(0);
+				const val2 = toss('2')(0, 1);
+
+				assert.deepEqual(val0, tossValues());
+				assert.deepEqual(val1, tossValues(0));
+				assert.deepEqual(val2, tossValues(0, 1));
+			});
+
+			it('should store each key entry as its own even when values are identical', function() {
+				const truth = toss('true')(true, 1, {}, 'true');
+				const lie = toss('false')(true, 1, {}, 'true');
+
+				assert.notStrictEqual(truth, lie);
+			});
+
+			it('should not overwrite a cached key value on future calls after the first call', function() {
+				const val1 = toss('key')(1, 2, 3, 4, 5);
+				const val2 = toss('key')(1);
+				const val3 = toss('key')();
+
+				assert.strictEqual(val1, val2);
+				assert.strictEqual(val2, val3);
+			});
 
 		});
 	});
