@@ -29,7 +29,17 @@ class Cacherole {
 			throw new TypeError('Invalid options argument in cacherole put method call');
 		}
 
-		return () => {};
+		// Set up the cache wrapper for the action
+		const wrapper = (key, timeoutCallback) => {
+			const value = this.cache.get(key);
+			if (value !== null) {
+				return () => value;
+			} else {
+				return (...params) => this.cache.put(key, action(...params), time, timeoutCallback);
+			}
+		};
+
+		return wrapper;
 	}
 }
 
