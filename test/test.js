@@ -22,9 +22,9 @@ describe('cacherole', function() {
 	});
 
 	it('should expose the cache interface as read-only', function() {
-		let obj = {};
-		cacherole.cache = obj;
-
+		const obj = {};
+		
+		assert.throws(() => cacherole.cache = obj, TypeError);
 		assert.notStrictEqual(cacherole.cache, obj);
 	});
 

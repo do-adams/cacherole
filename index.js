@@ -5,7 +5,11 @@ const cache = require('memory-cache');
 class Cacherole {
 	constructor() {
 		this.Cacherole = Cacherole;
-		this.cache = new cache.Cache();
+		Object.defineProperty(this, 'cache', {
+			value: new cache.Cache(),
+			configurable: false,
+			writable: false
+		});
 	}
 
 	put(options) {
