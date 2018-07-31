@@ -23,7 +23,7 @@ describe('cacherole', function() {
 
 	it('should expose the cache interface as read-only', function() {
 		const obj = {};
-		
+
 		assert.throws(() => cacherole.cache = obj, TypeError);
 		assert.notStrictEqual(cacherole.cache, obj);
 	});
@@ -202,10 +202,14 @@ describe('cacherole', function() {
 
 		describe('behavior', function() {
 			// Toss testing function - always returns a new object based on args from call
-			let toss;
-			function tossValues(...values) {
-				return values;
-			};
+			let toss, tossValues;
+			beforeEach(function() {
+				tossValues = function tossValues(...values) {
+					return values;
+				};
+				cacherole = new cacherole.Cacherole();
+				toss = cacherole.put(tossValues);
+			});
 
 			describe('toss testing function tests', function() {
 				it('should return new objects on each call', function() {
@@ -219,71 +223,126 @@ describe('cacherole', function() {
 				});
 			});
 
-			beforeEach(function() {
-				cacherole = new cacherole.Cacherole();
-				toss = cacherole.put(tossValues);
-			});
-
-			it('should return a function value', function() {
-				const fnValue = cacherole.put(() => {});
-				const optnValue = cacherole.put({
-					action: () => {}
+			describe('cache wrapper object', function() {
+				it('should return a function value', function() {
+					const fnValue = cacherole.put(() => {});
+					const optnValue = cacherole.put({
+						action: () => {}
+					});
+		
+					assert.typeOf(toss, 'function');
+					assert.typeOf(fnValue, 'function');
+					assert.typeOf(optnValue, 'function');
 				});
 	
-				assert.typeOf(toss, 'function');
-				assert.typeOf(fnValue, 'function');
-				assert.typeOf(optnValue, 'function');
+				it('should return a function value which is called to return a function value', function() {
+					const firstFn = cacherole.put(() => {});
+					assert.doesNotThrow(() => firstFn(), TypeError);
+	
+					const secondFn = firstFn();
+					assert.typeOf(secondFn, 'function');
+					assert.doesNotThrow(() => secondFn(), TypeError);
+				});
+
+				describe('general use', function() {
+					it('should cache function calls with a valid property key value', function() {
+						const val0 = toss('0')();
+						const val1 = toss('1')(0);
+						const val2 = toss('2')(0, 1);
+		
+						assert.strictEqual(val0, toss('0')());
+						assert.strictEqual(val1, toss('1')(0));
+						assert.strictEqual(val2, toss('2')(0, 1));
+					});
+		
+					it('should cache function calls with an undefined key value', function() {
+						const val1 = toss()(0);
+		
+						assert.strictEqual(val1, toss()(0));
+					});
+					
+					it('should execute the action provided by the caller when called', function() {
+						const val0 = toss('0')();
+						const val1 = toss('1')(0);
+						const val2 = toss('2')(0, 1);
+		
+						assert.deepEqual(val0, tossValues());
+						assert.deepEqual(val1, tossValues(0));
+						assert.deepEqual(val2, tossValues(0, 1));
+					});
+		
+					it('should store each key entry as its own even when values are identical', function() {
+						const truth = toss('true')(true, 1, {}, 'true');
+						const lie = toss('false')(true, 1, {}, 'true');
+		
+						assert.notStrictEqual(truth, lie);
+					});
+		
+					it('should not overwrite a cached key value on future calls after the first call', function() {
+						const val1 = toss('key')(1, 2, 3, 4, 5);
+						const val2 = toss('key')(1);
+						const val3 = toss('key')();
+		
+						assert.strictEqual(val1, val2);
+						assert.strictEqual(val2, val3);
+					});
+				});
+				
+				describe('this action binding', function() {
+					let obj, fn;
+					beforeEach(function() {
+						obj = {};
+						fn = function() {
+							return this === obj;
+						};
+					});
+
+					it('should preserve a function\'s binding when it is an undefined argument', function() {
+						assert.isNotTrue(fn());
+
+						let wrappedFn = cacherole.put(fn);
+						assert.isNotTrue(wrappedFn('not true')());
+
+						wrappedFn = cacherole.put({
+							action: fn
+						});
+						assert.isNotTrue(wrappedFn('should not be true')());
+
+						wrappedFn = cacherole.put({
+							action: fn,
+							binding: undefined
+						});
+						assert.isNotTrue(wrappedFn('def not true')());
+
+						let boundFn = fn.bind(obj);
+						assert.isTrue(boundFn());
+
+						wrappedFn = cacherole.put(boundFn);
+						assert.isTrue(wrappedFn('true')());
+
+						wrappedFn = cacherole.put({
+							action: boundFn
+						});
+						assert.isTrue(wrappedFn('should be true')());
+
+						wrappedFn = cacherole.put({
+							action: boundFn,
+							binding: undefined
+						});
+						assert.isTrue(wrappedFn('definitely true')());
+					});
+
+					it('should change a function\'s binding when provided as an argument', function() {
+						assert.isNotTrue(fn());
+
+						let wrappedFn = cacherole.put({
+							action: fn,
+							binding: obj
+						});
+						assert.isTrue(wrappedFn('must be true')());
+					});
+				});
 			});
-
-			it('should return a function value which returns a function value', function() {
-				const firstFn = cacherole.put(() => {});
-				const secondFn = firstFn();
-
-				assert.typeOf(secondFn, 'function');
-			});
-
-			it('should cache function calls with a valid property key value', function() {
-				const val0 = toss('0')();
-				const val1 = toss('1')(0);
-				const val2 = toss('2')(0, 1);
-
-				assert.strictEqual(val0, toss('0')());
-				assert.strictEqual(val1, toss('1')(0));
-				assert.strictEqual(val2, toss('2')(0, 1));
-			});
-
-			it('should cache function calls with an undefined key value', function() {
-				const val1 = toss()(0);
-
-				assert.strictEqual(val1, toss()(0));
-			});
-			
-			it('should execute the action provided by the caller when called', function() {
-				const val0 = toss('0')();
-				const val1 = toss('1')(0);
-				const val2 = toss('2')(0, 1);
-
-				assert.deepEqual(val0, tossValues());
-				assert.deepEqual(val1, tossValues(0));
-				assert.deepEqual(val2, tossValues(0, 1));
-			});
-
-			it('should store each key entry as its own even when values are identical', function() {
-				const truth = toss('true')(true, 1, {}, 'true');
-				const lie = toss('false')(true, 1, {}, 'true');
-
-				assert.notStrictEqual(truth, lie);
-			});
-
-			it('should not overwrite a cached key value on future calls after the first call', function() {
-				const val1 = toss('key')(1, 2, 3, 4, 5);
-				const val2 = toss('key')(1);
-				const val3 = toss('key')();
-
-				assert.strictEqual(val1, val2);
-				assert.strictEqual(val2, val3);
-			});
-
 		});
 	});
 });
