@@ -342,6 +342,67 @@ describe('cacherole', function() {
 						assert.isTrue(wrappedFn('must be true')());
 					});
 				});
+
+				describe('optional cache features', function() {
+					let ttl = 10;
+					beforeEach(function() {
+						toss = cacherole.put({
+							action: tossValues,
+							time: ttl
+						});
+					});
+
+					describe('time to live for cached values', function() {
+						it('should remove a value from the cache after the specified amount of time', function(done) {
+							let key = '0';
+							const stored = toss(key)();
+							let removed = cacherole.cache.get(key);
+							assert.strictEqual(stored, removed);
+	
+							setTimeout(() => {
+								removed = cacherole.cache.get(key);
+								assert.notExists(removed);
+								assert.notStrictEqual(stored, removed);
+								done();
+							}, ttl);
+						});
+	
+						it('should not remove a value from the cache before the specified amount of time', function(done) {
+							let key = '0';
+							const stored = toss(key)();
+							let removed = cacherole.cache.get(key);
+							assert.strictEqual(stored, removed);
+	
+							setImmediate(() => {
+								removed = cacherole.cache.get(key);
+								assert.exists(removed);
+								assert.strictEqual(stored, removed);
+								done();
+							});
+						});
+					});
+
+					describe('timeout callbacks', function() {
+						it('should run a timeout callback when a cached value expires', function(done) {
+							let cb = () => {
+								done();
+							};
+							toss('0', cb)();
+						});
+
+						it('should not overwrite the timeout callbacks on future calls for the same key', function(done) {
+							let cb = () => {
+								done();
+							};
+							toss('0', cb)();
+
+							let newCb = () => {
+								assert.fail();
+							};
+							toss('0', newCb)();
+						});
+					});
+				});
 			});
 		});
 	});
