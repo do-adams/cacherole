@@ -366,11 +366,11 @@ describe('cacherole', function() {
 						it('should remove a value from the cache after the specified amount of time', function(done) {
 							const key = '0';
 							const stored = toss(key)();
-							let removed = cacherole.cache.get(key);
-							assert.strictEqual(stored, removed);
+							const notRemoved = cacherole.cache.get(key);
+							assert.strictEqual(stored, notRemoved);
 	
 							setTimeout(() => {
-								removed = cacherole.cache.get(key);
+								const removed = cacherole.cache.get(key);
 								assert.notExists(removed);
 								assert.notStrictEqual(stored, removed);
 								done();
@@ -380,13 +380,13 @@ describe('cacherole', function() {
 						it('should not remove a value from the cache before the specified amount of time', function(done) {
 							const key = '0';
 							const stored = toss(key)();
-							let removed = cacherole.cache.get(key);
-							assert.strictEqual(stored, removed);
+							let notRemoved = cacherole.cache.get(key);
+							assert.strictEqual(stored, notRemoved);
 	
 							setImmediate(() => {
-								removed = cacherole.cache.get(key);
-								assert.exists(removed);
-								assert.strictEqual(stored, removed);
+								notRemoved = cacherole.cache.get(key);
+								assert.exists(notRemoved);
+								assert.strictEqual(stored, notRemoved);
 								done();
 							});
 						});
