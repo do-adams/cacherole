@@ -364,7 +364,7 @@ describe('cacherole', function() {
 
 					describe('time to live for cached values', function() {
 						it('should remove a value from the cache after the specified amount of time', function(done) {
-							let key = '0';
+							const key = '0';
 							const stored = toss(key)();
 							let removed = cacherole.cache.get(key);
 							assert.strictEqual(stored, removed);
@@ -378,7 +378,7 @@ describe('cacherole', function() {
 						});
 	
 						it('should not remove a value from the cache before the specified amount of time', function(done) {
-							let key = '0';
+							const key = '0';
 							const stored = toss(key)();
 							let removed = cacherole.cache.get(key);
 							assert.strictEqual(stored, removed);
@@ -394,23 +394,70 @@ describe('cacherole', function() {
 
 					describe('timeout callbacks', function() {
 						it('should run a timeout callback when a cached value expires', function(done) {
-							let cb = () => {
+							const cb = function() {
 								done();
 							};
+							toss('0', cb)();
+						});
+
+						it('should run an arrow function timeout callback when a cached value expires', function(done) {
+							const cb = () => done();
 							toss('0', cb)();
 						});
 
 						it('should not overwrite the timeout callbacks on future calls for the same key', function(done) {
-							let cb = () => {
-								done();
-							};
+							const cb = () => done();
 							toss('0', cb)();
 
-							let newCb = () => {
-								assert.fail();
-							};
+							const newCb = () => assert.fail();
 							toss('0', newCb)();
 						});
+					});
+				});
+
+				describe('update method', function() {
+					let ttl = 10;
+					beforeEach(function() {
+						toss = cacherole.put({
+							action: tossValues,
+							time: ttl
+						});
+					});
+					
+					it('should expose an update method', function() {
+						assert.exists(toss.update);
+						assert.typeOf(toss.update, 'function');
+					});
+
+					it('should update a stored value in the cache', function() {
+						const key = 'update';
+						const stored = toss(key)();
+						const notUpdated = toss(key)(1);
+
+						assert.strictEqual(stored, notUpdated);
+
+						const updated = toss.update(key)(1, 2);
+						assert.notStrictEqual(stored, updated);
+					});
+
+					it('should overwrite an earlier timeoutCallback value', function(done) {
+						const key = '0';
+						const cb = () => assert.fail();
+						toss(key, cb)();
+
+						const newCb = () => done();
+						toss.update(key, newCb)();
+					});
+
+					it('should create a new entry for uncached keys', function() {
+						const key = '0';
+						const missing = cacherole.cache.get(key);
+						assert.notExists(missing);
+
+						const stored = toss.update(key)();
+						const found = cacherole.cache.get(key);
+						assert.exists(found);
+						assert.strictEqual(stored, found);
 					});
 				});
 			});
