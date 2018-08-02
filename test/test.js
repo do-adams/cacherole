@@ -237,9 +237,9 @@ describe('cacherole', function() {
 	
 				it('should return a function value which is called to return a function value', function() {
 					const firstFn = cacherole.put(() => {});
-					assert.doesNotThrow(() => firstFn(), TypeError);
+					assert.doesNotThrow(() => firstFn('test'), TypeError);
 	
-					const secondFn = firstFn();
+					const secondFn = firstFn('test');
 					assert.typeOf(secondFn, 'function');
 					assert.doesNotThrow(() => secondFn(), TypeError);
 				});
@@ -254,11 +254,21 @@ describe('cacherole', function() {
 						assert.strictEqual(val1, toss('1')(0));
 						assert.strictEqual(val2, toss('2')(0, 1));
 					});
-		
-					it('should cache function calls with an undefined key value', function() {
-						const val1 = toss()(0);
-		
-						assert.strictEqual(val1, toss()(0));
+
+					it('should throw an error when called with a non-string type key value', function() {
+						assert.throws(() => toss(), TypeError);
+						assert.throws(() => toss()(), TypeError);
+						assert.throws(() => toss(0)(), TypeError);
+						assert.throws(() => toss(0, () => {})(), TypeError);
+						assert.throws(() => toss(1)(), TypeError);
+						assert.throws(() => toss(false)(), TypeError);
+						assert.throws(() => toss(true)(), TypeError);
+						assert.throws(() => toss(null)(), TypeError);
+						assert.throws(() => toss({})(), TypeError);
+						assert.throws(() => toss(undefined)(), TypeError);
+						assert.throws(() => toss(function() {})(), TypeError);
+						assert.throws(() => toss(() => {})(), TypeError);
+						assert.throws(() => toss(Symbol())(), TypeError);
 					});
 					
 					it('should execute the action provided by the caller when called', function() {
