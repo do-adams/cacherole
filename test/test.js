@@ -405,6 +405,15 @@ describe('cacherole', function() {
 							toss('0', cb)();
 						});
 
+						it('should expose a key and a value to the timeout callback', function(done) {
+							const cb = function(key, value) {
+								assert.exists(key);
+								assert.exists(value);
+								done();
+							};
+							toss('0', cb)();
+						});
+
 						it('should not overwrite the timeout callbacks on future calls for the same key', function(done) {
 							const cb = () => done();
 							toss('0', cb)();
