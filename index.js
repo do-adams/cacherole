@@ -42,6 +42,11 @@ class Cacherole {
 			}
 		};
 
+		wrapper.update = (key, timeoutCallback) => {
+			this.cache.del(key);
+			return wrapper(key, timeoutCallback);
+		};
+
 		return wrapper;
 	}
 }
