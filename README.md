@@ -10,7 +10,7 @@ npm install cacherole
 
 ## Usage
 
-cacherole is an abstraction over the `get` and `put` functionality of a traditional cache. It expects to do work in the form of an action and takes care of the caching behind-the-scenes. 
+cacherole is an abstraction over the `get` and `put` functionality of a traditional cache. It expects to do work in the form of an `action` and takes care of the caching behind-the-scenes. 
 
 You only need to provide a key and your typical arguments in the form of: **cachedAction(key)(actionArguments)**
 
