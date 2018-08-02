@@ -31,6 +31,9 @@ class Cacherole {
 
 		// Set up the cache wrapper for the action
 		const wrapper = (key, timeoutCallback) => {
+			if (typeof key !== 'string') {
+				throw TypeError('Key value must be a string');
+			}
 			const value = this.cache.get(key);
 			if (value !== null) {
 				return () => value;
